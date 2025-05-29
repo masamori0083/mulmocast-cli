@@ -1,3 +1,4 @@
+// 指定URLからデータを取得し MulmoScript を生成するツール
 import "dotenv/config";
 import { GraphAI, GraphData } from "graphai";
 import { openAIAgent } from "@graphai/openai_agent";
@@ -148,7 +149,16 @@ const graphData: GraphData = {
   },
 };
 
-export const createMulmoScriptFromUrl = async ({ urls, templateName, outDirPath, filename, cacheDirPath, llm, llm_model }: ScriptingParams) => {
+// URL から取得した情報をもとに MulmoScript を生成するメイン処理
+export const createMulmoScriptFromUrl = async ({
+  urls,
+  templateName,
+  outDirPath,
+  filename,
+  cacheDirPath,
+  llm,
+  llm_model,
+}: ScriptingParams) => {
   mkdir(outDirPath);
   mkdir(cacheDirPath);
   const parsedUrls = urlsSchema.parse(urls);

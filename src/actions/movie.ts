@@ -1,3 +1,4 @@
+// 音声と画像から動画を生成する処理をまとめたモジュール
 import { GraphAILogger } from "graphai";
 import { MulmoStudio, MulmoStudioContext, MulmoCanvasDimension, BeatMediaType } from "../types/index.js";
 import { MulmoScriptMethods } from "../methods/index.js";
@@ -40,6 +41,8 @@ export const getVideoPart = (inputIndex: number, mediaType: BeatMediaType, durat
   };
 };
 
+// 動画中の音声トラックを準備するヘルパー
+// 指定した入力から必要な長さに切り出し、開始時間を遅延させる
 export const getAudioPart = (inputIndex: number, duration: number, delay: number) => {
   const audioId = `a${inputIndex}`;
 
@@ -75,7 +78,14 @@ const getOutputOption = (audioId: string) => {
   ];
 };
 
-const createVideo = async (audioArtifactFilePath: string, outputVideoPath: string, studio: MulmoStudio, caption: string | undefined) => {
+// 画像と音声を組み合わせて最終的な動画を生成する
+// caption が指定されていれば字幕もオーバーレイする
+const createVideo = async (
+  audioArtifactFilePath: string,
+  outputVideoPath: string,
+  studio: MulmoStudio,
+  caption: string | undefined,
+) => {
   const start = performance.now();
   const ffmpegContext = FfmpegContextInit();
 
@@ -152,6 +162,7 @@ const createVideo = async (audioArtifactFilePath: string, outputVideoPath: strin
   GraphAILogger.info((studio.script.references ?? []).map((reference) => `${reference.title} (${reference.url})`).join("\n"));
 };
 
+// CLIから呼び出される動画生成のエントリポイント
 export const movie = async (context: MulmoStudioContext) => {
   MulmoStudioMethods.setSessionState(context.studio, "video", true);
   try {

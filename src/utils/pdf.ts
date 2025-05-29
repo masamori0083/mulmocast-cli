@@ -1,8 +1,17 @@
+// PDF 出力関連のユーティリティ関数
 import { PDFFont } from "pdf-lib";
 export const fontSize = 12;
 export const textMargin = 6;
 
-export const drawSize = (fitWidth: boolean, expectWidth: number, expectHeight: number, origWidth: number, origHeight: number) => {
+// 画像をPDF上に描画する際の表示サイズを計算する
+// fitWidth が true の場合は幅を基準にスケーリング
+export const drawSize = (
+  fitWidth: boolean,
+  expectWidth: number,
+  expectHeight: number,
+  origWidth: number,
+  origHeight: number,
+) => {
   if (fitWidth) {
     const drawWidth = expectWidth;
     const scale = drawWidth / origWidth;
@@ -29,7 +38,13 @@ const isFullwidth = (char: string) => {
   );
 };
 
-export const wrapText = (text: string, font: PDFFont, fontSize: number, maxWidth: number): string[] => {
+// 文字列を指定幅で折り返すユーティリティ
+export const wrapText = (
+  text: string,
+  font: PDFFont,
+  fontSize: number,
+  maxWidth: number,
+): string[] => {
   const lines: string[] = [];
   for (const rawLine of text.split("\n")) {
     let line = "";

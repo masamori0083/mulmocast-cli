@@ -1,3 +1,4 @@
+// テキストから音声を生成しBGMを合成する処理を行うモジュール
 import "dotenv/config";
 
 import { GraphAI } from "graphai";
@@ -31,13 +32,23 @@ const { default: __, ...vanillaAgents } = agents;
 
 // const rion_takanashi_voice = "b9277ce3-ba1c-4f6f-9a65-c05ca102ded0"; // たかなし りおん
 // const ben_carter_voice = "bc06c63f-fef6-43b6-92f7-67f919bd5dae"; // ベン・カーター
+// 各TTSプロバイダー名を対応するエージェントにマッピング
 const provider_to_agent = {
   nijivoice: "ttsNijivoiceAgent",
   openai: "ttsOpenaiAgent",
   google: "ttsGoogleAgent",
 };
 
-const getAudioPath = (context: MulmoStudioContext, beat: MulmoBeat, audioFile: string, audioDirPath: string): string | undefined => {
+// 与えられたBeatから実際の音声ファイルのパスを取得する
+// - 既に音声ファイルが指定されている場合はそのパスを返す
+// - テキストが空なら音声は不要として undefined を返す
+// - それ以外は出力先のファイルパスを生成する
+const getAudioPath = (
+  context: MulmoStudioContext,
+  beat: MulmoBeat,
+  audioFile: string,
+  audioDirPath: string,
+): string | undefined => {
   if (beat.audio?.type === "audio") {
     const path = resolveMediaSource(beat.audio.source, context);
     if (path) {
@@ -46,11 +57,13 @@ const getAudioPath = (context: MulmoStudioContext, beat: MulmoBeat, audioFile: s
     throw new Error("Invalid audio source");
   }
   if (beat.text === "") {
-    return undefined; // It indicates that the audio is not needed.
+    return undefined; // 音声生成の必要がない
   }
   return getAudioSegmentFilePath(audioDirPath, context.studio.filename, audioFile);
 };
 
+// 各Beatごとの音声生成に必要な情報を整理する前処理
+// 生成する音声ファイル名やTTSのパラメータを計算して返す
 const preprocessor = (namedInputs: {
   beat: MulmoBeat;
   studioBeat: MulmoStudioBeat;
@@ -114,6 +127,8 @@ const graph_tts: GraphData = {
   },
 };
 
+// Audio 作成用の GraphAI 定義
+// 各ノードで TTS 実行やファイル結合を行う
 const graph_data: GraphData = {
   version: 0.5,
   concurrency: 8,
@@ -190,6 +205,8 @@ const agentFilters = [
   },
 ];
 
+// スクリプトから音声ファイル一式を生成するメイン処理
+// GraphAI に値を注入し、各BeatのTTSやBGM合成を実行する
 export const audio = async (context: MulmoStudioContext) => {
   try {
     MulmoStudioMethods.setSessionState(context.studio, "audio", true);

@@ -1,3 +1,4 @@
+// ffmpeg を扱うユーティリティ関数群
 import ffmpeg from "fluent-ffmpeg";
 import { GraphAILogger } from "graphai";
 
@@ -7,6 +8,7 @@ export type FfmpegContext = {
   filterComplex: string[];
 };
 
+// ffmpeg コマンドを初期化して入力管理用のコンテキストを生成
 export const FfmpegContextInit = (): FfmpegContext => {
   return {
     command: ffmpeg(),
@@ -15,13 +17,20 @@ export const FfmpegContextInit = (): FfmpegContext => {
   };
 };
 
+// ffmpeg コマンドに入力ファイルを追加し、そのインデックスを返す
 export const FfmpegContextAddInput = (context: FfmpegContext, input: string) => {
   context.command.input(input);
   context.inputCount++;
-  return context.inputCount - 1; // returned the index of the input
+  return context.inputCount - 1; // 現在の入力番号を返す
 };
 
-export const FfmpegContextPushFormattedAudio = (context: FfmpegContext, sourceId: string, outputId: string, duration: number | undefined = undefined) => {
+// オーディオを標準フォーマット(44100Hz stereo)に変換し、必要に応じて長さを調整
+export const FfmpegContextPushFormattedAudio = (
+  context: FfmpegContext,
+  sourceId: string,
+  outputId: string,
+  duration: number | undefined = undefined,
+) => {
   if (duration !== undefined) {
     context.filterComplex.push(`${sourceId}atrim=duration=${duration},aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo${outputId}`);
   } else {
@@ -29,14 +38,24 @@ export const FfmpegContextPushFormattedAudio = (context: FfmpegContext, sourceId
   }
 };
 
-export const FfmpegContextInputFormattedAudio = (context: FfmpegContext, input: string, duration: number | undefined = undefined) => {
+// ファイルを入力として登録し、整形済みオーディオを返す
+export const FfmpegContextInputFormattedAudio = (
+  context: FfmpegContext,
+  input: string,
+  duration: number | undefined = undefined,
+) => {
   const index = FfmpegContextAddInput(context, input);
   const audioId = `[a${index}]`;
   FfmpegContextPushFormattedAudio(context, `[${index}:a]`, audioId, duration);
   return audioId;
 };
 
-export const FfmpegContextGenerateOutput = (context: FfmpegContext, output: string, options: string[] = []): Promise<number> => {
+// FFmpeg コマンドを実行して動画/音声を生成する
+export const FfmpegContextGenerateOutput = (
+  context: FfmpegContext,
+  output: string,
+  options: string[] = [],
+): Promise<number> => {
   return new Promise((resolve, reject) => {
     context.command
       .complexFilter(context.filterComplex)
