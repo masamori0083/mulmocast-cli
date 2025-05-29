@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// MulmoCast CLI のエントリポイント。各コマンドを yargs で登録する
 
 import "dotenv/config";
 import yargs from "yargs/yargs";
@@ -11,6 +12,7 @@ import * as pdfCmd from "./commands/pdf/index.js";
 import * as toolCmd from "./commands/tool/index.js";
 import { GraphAILogger } from "graphai";
 
+// yargs を用いて各サブコマンドを構築する
 export const main = async () => {
   const cli = yargs(hideBin(process.argv))
     .scriptName("mulmo")
@@ -36,6 +38,7 @@ export const main = async () => {
   await cli.parseAsync();
 };
 
+// 予期せぬエラーが発生した場合はログを出力して終了
 main().catch((error) => {
   GraphAILogger.info("An unexpected error occurred:", error);
   process.exit(1);
